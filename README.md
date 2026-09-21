@@ -29,7 +29,7 @@
 |---|---|
 | GitHub Repository | [github.com/Vaani0702/Invoice-Processing-Assistant---InvoLens](https://github.com/Vaani0702/Invoice-Processing-Assistant---InvoLens) |
 | 5-Minute Demo Video | [Watch on YouTube](https://youtu.be/Hp-LKD60_7E) |
-| Project Overview PPT | https://onedrive.live.com/personal/32891736f4f9f23e/_layouts/15/Doc.aspx?sourcedoc=%7Ba14b0350-c944-45a6-a4f8-524123660c96%7D&action=default&redeem=aHR0cHM6Ly8xZHJ2Lm1zL3AvYy8zMjg5MTczNmY0ZjlmMjNlL0lRQlFBMHVoUk1tbVJhVDRVa0VqWmd5V0FRUnktME9uOEFFYmVwQ3Vyc29fN1ZRP2U9aDY2VnJG&slrid=23743da2-f004-5000-b291-9cd17edcf499&originalPath=aHR0cHM6Ly9vbmVkcml2ZS5saXZlLmNvbS86cDovZy9wZXJzb25hbC8zMjg5MTczNmY0ZjlmMjNlL0lRQlFBMHVoUk1tbVJhVDRVa0VqWmd5V0FRUnktME9uOEFFYmVwQ3Vyc29fN1ZRP3J0aW1lPVZRNmVpUWdZMzBnJnJlZGVlbT1hSFIwY0hNNkx5OHhaSEoyTG0xekwzQXZZeTh6TWpnNU1UY3pObVkwWmpsbU1qTmxMMGxSUWxGQk1IVm9VazF0YlZKaFZEUlZhMFZxV21kNVYwRlJVbmt0TUU5dU9FRkZZbVZ3UTNWeWMyOWZOMVpSUDJVOWFEWTJWbkpH&CID=f0b01c30-5f7a-4c35-b94d-ccd4cf459b9f&_SRM=0:G:56&file=InvoiceProcessingAssistant-%20InvoLens.pptx |
+| Project Overview PPT | [PPt] (https://1drv.ms/p/c/32891736f4f9f23e/IQBQA0uhRMmmRaT4UkEjZgyWAQRy-0On8AEbepCurso_7VQ?e=h66VrF) |
 
 ---
 
