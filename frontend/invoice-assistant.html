@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>InvoLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF4F8; --surface:#FFFFFF; --surface-2:#F5E9F2; --border:#EEDCE9; --border-strong:#DDC2D8;
+    --ink:#3A2C3D; --ink-soft:#7C6B7E; --muted:#A695A6;
+    --accent:#B98FC9; --accent-soft:#F1E3F4; --accent-strong:#9A6BB0;
+    --success:#5F9A6E; --success-bg:#E6F2E8;
+    --warn:#B98229; --warn-bg:#F7ECD9;
+    --danger:#B14C5C; --danger-bg:#F7E4E7;
+    --info:#5C7BB0; --info-bg:#E6ECF7;
+  }
+  :root[data-theme="dark"]{
+    --bg:#1A1420; --surface:#211A28; --surface-2:#2A2132; --border:#362B3F; --border-strong:#453A50;
+    --ink:#F4EDF6; --ink-soft:#B7A6BC; --muted:#7A6C80;
+    --accent:#C79EDA; --accent-soft:#2F2438; --accent-strong:#D9B4E8;
+    --success:#8FCB9C; --success-bg:#1F2E23;
+    --warn:#E0B36C; --warn-bg:#332A16;
+    --danger:#E0929E; --danger-bg:#332025;
+    --info:#8FAEE0; --info-bg:#1E2733;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:14.5px;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .serif{font-family:'Fraunces',Georgia,serif; font-style:italic; font-weight:500;}
+
+  header{position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+    padding:1.2rem 1.6rem; background:color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter:blur(12px);
+    border-bottom:0.5px solid var(--border);}
+  .brand{display:flex; align-items:center; gap:9px; font-weight:700; font-size:16px;}
+  .brand svg{width:26px; height:26px;}
+  .header-right{display:flex; align-items:center; gap:12px;}
+  #themeBtn{background:var(--surface); border:none; box-shadow:0 2px 8px rgba(154,107,176,0.12); color:var(--ink-soft); width:34px;height:34px;border-radius:50%; cursor:pointer; font-size:14px;}
+  .status-pill{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); background:var(--surface); padding:6px 12px; border-radius:20px; box-shadow:0 2px 8px rgba(154,107,176,0.10);}
+  .status-dot{width:6px;height:6px;border-radius:50%; background:var(--muted);}
+  .status-dot.on{background:var(--success);}
+  .status-dot.off{background:var(--danger);}
+
+  main{max-width:680px; margin:0 auto; padding:2.6rem 1.4rem 6rem;}
+
+  h1{font-size:1.9rem; font-weight:700; letter-spacing:-0.015em; text-align:center; margin:0 0 0.6rem;}
+  .sub{text-align:center; color:var(--ink-soft); font-size:14.5px; max-width:440px; margin:0 auto 2.4rem; line-height:1.55;}
+
+  .banner{display:flex; align-items:center; gap:8px; padding:11px 16px; border-radius:14px; font-size:13px; margin-bottom:1.6rem; background:var(--danger-bg); color:var(--danger);}
+
+  .upload-card{
+    background:var(--surface); border-radius:24px; padding:2.6rem 1.6rem; text-align:center; cursor:pointer;
+    box-shadow:0 4px 24px rgba(154,107,176,0.10); transition:transform .2s, box-shadow .2s; margin-bottom:2.4rem;
+  }
+  .upload-card:hover{transform:translateY(-2px); box-shadow:0 10px 32px rgba(154,107,176,0.18);}
+  .upload-card.dragover{background:var(--accent-soft);}
+  .upload-icon{width:52px; height:52px; border-radius:16px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; margin:0 auto 1.1rem;}
+  .upload-icon svg{width:24px; height:24px; stroke:var(--accent-strong);}
+  .upload-card .t{font-weight:600; font-size:15px; margin-bottom:4px;}
+  .upload-card .d{color:var(--ink-soft); font-size:13px;}
+  .upload-card.busy .t::after{content:'…'; animation:dots 1.2s steps(4) infinite;}
+
+  .feed-heading{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:1.1rem;}
+  .feed-heading h2{font-size:14px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em;}
+  .stat-pills{display:flex; gap:8px; flex-wrap:wrap;}
+  .stat-pill{font-size:11.5px; padding:4px 10px; border-radius:14px; font-family:'IBM Plex Mono',monospace;}
+  .stat-pill.review{background:var(--warn-bg); color:var(--warn);}
+  .stat-pill.approved{background:var(--success-bg); color:var(--success);}
+  .stat-pill.flagged{background:var(--danger-bg); color:var(--danger);}
+  .stat-pill.processing{background:var(--info-bg); color:var(--info);}
+
+  .empty{text-align:center; padding:3rem 1rem; color:var(--muted); font-size:13.5px;}
+
+  .card{background:var(--surface); border-radius:20px; margin-bottom:1rem; box-shadow:0 3px 16px rgba(154,107,176,0.08); overflow:hidden; transition:box-shadow .2s;}
+  .card:hover{box-shadow:0 8px 26px rgba(154,107,176,0.14);}
+  .card-head{display:flex; align-items:center; gap:12px; padding:1.1rem 1.3rem; cursor:pointer;}
+  .card-icon{width:38px; height:38px; border-radius:11px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--accent-strong); flex-shrink:0;}
+  .card-main{flex:1; min-width:0;}
+  .card-main .v{font-weight:600; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .card-main .n{font-size:12px; color:var(--muted); font-family:'IBM Plex Mono',monospace;}
+  .card-amt{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:14.5px; white-space:nowrap;}
+  .badge{font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; white-space:nowrap;}
+  .badge.review{background:var(--warn-bg); color:var(--warn);}
+  .badge.processing{background:var(--info-bg); color:var(--info);}
+  .badge.approved{background:var(--success-bg); color:var(--success);}
+  .badge.flagged{background:var(--danger-bg); color:var(--danger);}
+  .chev{color:var(--muted); transition:transform .2s; flex-shrink:0;}
+  .card.open .chev{transform:rotate(180deg);}
+
+  .card-body{max-height:0; overflow:hidden; transition:max-height .35s ease;}
+  .card.open .card-body{max-height:600px;}
+  .card-body-inner{padding:0 1.3rem 1.3rem; border-top:0.5px solid var(--border);}
+  .field-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; font-size:13px;}
+  .field-l{color:var(--ink-soft);}
+  .field-r{display:flex; align-items:center; gap:8px;}
+  .conf-bar{width:32px; height:4px; border-radius:2px; background:var(--surface-2); overflow:hidden;}
+  .conf-bar i{display:block; height:100%; background:var(--success);}
+  .conf-bar.mid i{background:var(--warn);} .conf-bar.low i{background:var(--danger);}
+  .mock-note{font-size:11.5px; color:var(--muted); margin-top:8px; font-style:italic;}
+  .card-actions{display:flex; gap:8px; margin-top:1rem;}
+  .btn{flex:1; padding:9px; border-radius:12px; border:none; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;}
+  .btn-approve{background:var(--success-bg); color:var(--success);}
+  .btn-flag{background:var(--danger-bg); color:var(--danger);}
+  .btn:disabled{opacity:0.5; cursor:default;}
+
+  .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--ink); color:var(--bg);
+    padding:10px 18px; border-radius:14px; font-size:13px; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; max-width:88vw; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @keyframes dots{0%,100%{opacity:0;} 50%{opacity:1;}}
+
+  footer{text-align:center; padding:2rem 1rem; color:var(--muted); font-size:12px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="9" fill="var(--accent-strong)"/>
+      <circle cx="14" cy="14" r="6.5" stroke="white" stroke-width="2"/>
+      <line x1="18.5" y1="18.5" x2="24" y2="24" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    InvoLens
+  </div>
+  <div class="header-right">
+    <div class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText">Checking…</span></div>
+    <button id="themeBtn" aria-label="Toggle theme">◐</button>
+  </div>
+</header>
+
+<main>
+  <h1>Upload an invoice.</h1>
+  <p class="sub">InvoLens reads it, scores its own confidence, and tells you if anything needs a second look.</p>
+
+  <div id="bannerSlot"></div>
+
+  <div class="upload-card" id="uploadCard">
+    <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></div>
+    <div class="t" id="uploadText">Drop an invoice, or click to upload</div>
+    <div class="d">PDF, JPG, or PNG</div>
+    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none">
+  </div>
+
+  <div class="feed-heading">
+    <h2>Processed invoices</h2>
+    <div class="stat-pills" id="statPills"></div>
+  </div>
+
+  <div id="feed"><div class="empty">Nothing here yet — upload an invoice above.</div></div>
+</main>
+
+<footer>InvoLens · AI-103 group project · Chitkara University</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = window.API_BASE || '';
+let invoices = [];
+let openId = null;
+
+function inr(n){ return '\u20b9'+Math.round(n||0).toLocaleString('en-IN'); }
+function confClass(v){ return v>=85?'':(v>=70?'mid':'low'); }
+const statusMeta = {
+  review:{label:'Needs review', cls:'review'}, processing:{label:'Processing', cls:'processing'},
+  approved:{label:'Approved', cls:'approved'}, flagged:{label:'Flagged', cls:'flagged'},
+};
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function setBanner(msg){
+  document.getElementById('bannerSlot').innerHTML = msg ? `<div class="banner">${msg}</div>` : '';
+}
+
+async function checkHealth(){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  try{
+    const r = await fetch(API_BASE+'/health');
+    const data = await r.json();
+    const connected = data.azure_document_intelligence_configured || data.azure_content_understanding_configured;
+    dot.className = 'status-dot ' + (connected ? 'on' : '');
+    text.textContent = connected ? 'Azure connected' : 'Mock mode · Azure not configured';
+    setBanner(null);
+  }catch(e){
+    dot.className = 'status-dot off';
+    text.textContent = 'Backend unreachable';
+    setBanner('Could not reach the backend. Start it with: <span class="mono">uvicorn main:app --reload</span>, then open this page again.');
+  }
+}
+
+async function loadInvoices(){
+  try{
+    const r = await fetch(API_BASE+'/invoices');
+    if(!r.ok) return;
+    invoices = await r.json();
+    render();
+  }catch(e){ /* handled by checkHealth banner */ }
+}
+
+async function uploadFile(file){
+  const card = document.getElementById('uploadCard');
+  const text = document.getElementById('uploadText');
+  card.classList.add('busy'); text.textContent = 'Reading your invoice';
+  const form = new FormData(); form.append('file', file);
+  try{
+    const r = await fetch(API_BASE+'/invoices/upload', {method:'POST', body:form});
+    if(!r.ok) throw new Error('upload failed');
+    openId = null;
+    await loadInvoices();
+    if(invoices.length) openId = invoices[0].id;
+    render();
+    showToast('Invoice processed');
+  }catch(e){
+    showToast('Upload failed \u2014 check that the backend is running');
+  }
+  card.classList.remove('busy'); text.textContent = 'Drop an invoice, or click to upload';
+}
+
+function render(){
+  const feed = document.getElementById('feed');
+  const pills = document.getElementById('statPills');
+  const counts = {review:0, processing:0, approved:0, flagged:0};
+  invoices.forEach(i=> counts[i.status] = (counts[i.status]||0)+1);
+
+  pills.innerHTML = Object.keys(counts).filter(k=>counts[k]>0).map(k=>
+    `<span class="stat-pill ${statusMeta[k].cls}">${counts[k]} ${statusMeta[k].label.toLowerCase()}</span>`
+  ).join('') || '<span class="stat-pill processing">0 processed</span>';
+
+  if(!invoices.length){
+    feed.innerHTML = '<div class="empty">Nothing here yet — upload an invoice above.</div>';
+    return;
+  }
+
+  feed.innerHTML = invoices.slice().reverse().map(inv=>{
+    const initials = (inv.vendor||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const conf = inv.confidence;
+    const avg = conf ? Math.round(Object.values(conf).reduce((a,b)=>a+b,0)/Object.values(conf).length) : null;
+    const isOpen = openId === inv.id;
+    const items = (inv.items||[]).length;
+    return `
+    <div class="card ${isOpen?'open':''}" data-id="${inv.id}">
+      <div class="card-head" data-toggle="${inv.id}">
+        <div class="card-icon">${initials}</div>
+        <div class="card-main">
+          <div class="v">${inv.vendor||'Unknown vendor'}</div>
+          <div class="n">${inv.number||'\u2014'} \u00b7 ${inv.date||'\u2014'}</div>
+        </div>
+        <div class="card-amt">${inv.total!=null ? inr(inv.total) : '\u2014'}</div>
+        <span class="badge ${statusMeta[inv.status]?.cls||'processing'}">${statusMeta[inv.status]?.label||inv.status}</span>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          ${['vendor','number','date','total','items'].map(f=>{
+            const label = {vendor:'Vendor',number:'Invoice number',date:'Date',total:'Total',items:'Line items'}[f];
+            const val = f==='total' ? inr(inv.total) : (f==='items' ? items+' item'+(items===1?'':'s') : (inv[f]||'\u2014'));
+            const c = conf ? conf[f] : null;
+            return `<div class="field-row">
+              <span class="field-l">${label}</span>
+              <span class="field-r">
+                <span>${val}</span>
+                ${c!=null?`<span class="conf-bar ${confClass(c)}"><i style="width:${c}%"></i></span><span class="mono" style="font-size:10.5px;color:var(--muted);width:26px;text-align:right;display:inline-block">${c}%</span>`:''}
+              </span>
+            </div>`;
+          }).join('')}
+          ${inv.mock ? '<div class="mock-note">Mock data \u2014 Azure not configured yet.</div>' : ''}
+          <div class="card-actions">
+            <button class="btn btn-flag" data-flag="${inv.id}" ${inv.status==='flagged'?'disabled':''}>Flag</button>
+            <button class="btn btn-approve" data-approve="${inv.id}" ${inv.status==='approved'?'disabled':''}>Approve</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  feed.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const id = el.getAttribute('data-toggle');
+      openId = openId === id ? null : id;
+      render();
+    });
+  });
+  feed.querySelectorAll('[data-approve]').forEach(el=>{
+    el.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = el.getAttribute('data-approve');
+      await fetch(API_BASE+`/invoices/${id}/approve`, {method:'POST'});
+      await loadInvoices(); showToast('Approved');
+    });
+  });
+  feed.querySelectorAll('[data-flag]').forEach(el=>{
+    el.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = el.getAttribute('data-flag');
+      await fetch(API_BASE+`/invoices/${id}/flag`, {method:'POST'});
+      await loadInvoices(); showToast('Flagged for review');
+    });
+  });
+}
+
+const uploadCard = document.getElementById('uploadCard');
+const fileInput = document.getElementById('fileInput');
+uploadCard.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', (e)=>{ if(e.target.files[0]) uploadFile(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev=> uploadCard.addEventListener(ev, (e)=>{ e.preventDefault(); uploadCard.classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev=> uploadCard.addEventListener(ev, (e)=>{ e.preventDefault(); uploadCard.classList.remove('dragover'); }));
+uploadCard.addEventListener('drop', (e)=>{ const f = e.dataTransfer.files[0]; if(f) uploadFile(f); });
+
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next === 'light' ? '' : next);
+  try{ localStorage.setItem('invoLensAppTheme', next); }catch(e){}
+});
+try{
+  const t = localStorage.getItem('invoLensAppTheme');
+  if(t === 'dark') document.documentElement.setAttribute('data-theme','dark');
+}catch(e){}
+
+checkHealth();
+loadInvoices();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>

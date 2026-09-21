@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>InvoLens — Invoices that audit themselves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,500&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF4F8; --surface:#FFFFFF; --surface-2:#F5E9F2; --border:#EEDCE9; --border-strong:#DDC2D8;
+    --ink:#3A2C3D; --ink-soft:#7C6B7E; --muted:#A695A6;
+    --accent:#B98FC9; --accent-soft:#F1E3F4; --accent-strong:#9A6BB0;
+    --success:#7FAE8C; --warn:#C99A5C;
+  }
+  :root[data-theme="dark"]{
+    --bg:#1A1420; --surface:#211A28; --surface-2:#2A2132; --border:#362B3F; --border-strong:#453A50;
+    --ink:#F4EDF6; --ink-soft:#B7A6BC; --muted:#7A6C80;
+    --accent:#C79EDA; --accent-soft:#2F2438; --accent-strong:#D9B4E8;
+    --success:#8FCB9C; --warn:#E0B36C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; overflow-x:hidden;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+  .serif{font-family:'Fraunces',Georgia,serif; font-style:italic; font-weight:500;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+
+  /* ---------- atmospheric background (original, no stock imagery) ---------- */
+  #atmos{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+  #atmos .blob{position:absolute; border-radius:50%; filter:blur(90px); opacity:0.55; will-change:transform;}
+  #atmos .b1{width:700px; height:700px; background:radial-gradient(circle, #F0D8EC 0%, transparent 70%); top:-200px; left:-140px; animation:drift1 28s ease-in-out infinite;}
+  #atmos .b2{width:580px; height:580px; background:radial-gradient(circle, #D9DEF2 0%, transparent 70%); top:5%; right:-180px; animation:drift2 34s ease-in-out infinite;}
+  #atmos .b3{width:520px; height:520px; background:radial-gradient(circle, #F3DCE8 0%, transparent 70%); bottom:-160px; left:15%; animation:drift3 32s ease-in-out infinite;}
+  #atmos .grain{position:absolute; inset:0; opacity:0.05; mix-blend-mode:overlay;}
+  #atmos .vignette{position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%, transparent 40%, var(--bg) 100%);}
+  @keyframes drift1{0%,100%{transform:translate(0,0);} 50%{transform:translate(60px,40px);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0);} 50%{transform:translate(-50px,60px);}}
+  @keyframes drift3{0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-50px);}}
+
+  #glow{position:fixed; width:560px; height:560px; border-radius:50%; pointer-events:none; z-index:0;
+    background:radial-gradient(circle, color-mix(in srgb, var(--ink) 8%, transparent) 0%, transparent 70%);
+    transform:translate(-50%,-50%); will-change:transform;}
+
+  section, nav, footer{position:relative; z-index:1;}
+
+  /* ---------- nav ---------- */
+  nav{position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
+    padding: calc(1.1rem + env(safe-area-inset-top,0px)) 2rem 1.1rem; backdrop-filter:blur(14px);
+    background:color-mix(in srgb, var(--bg) 70%, transparent); border-bottom:0.5px solid var(--border);}
+  .logo{display:flex; align-items:center; gap:9px; font-weight:700; font-size:15px; letter-spacing:-0.01em; text-decoration:none;}
+  .logo svg{width:26px; height:26px;}
+  .links{display:flex; gap:1.8rem; align-items:center;}
+  nav a.nav-link{color:var(--ink-soft); text-decoration:none; font-size:13.5px;}
+  nav a.nav-link:hover{color:var(--ink);}
+  .cta-pill{color:var(--bg); background:var(--ink); padding:8px 17px; border-radius:20px; font-weight:600; font-size:13px; text-decoration:none;}
+  .cta-pill:hover{opacity:0.85;}
+  #themeBtn{background:none;border:0.5px solid var(--border-strong); color:var(--ink-soft); width:30px;height:30px;border-radius:50%; cursor:pointer;}
+
+  .wrap{max-width:1100px; margin:0 auto; padding:0 2rem;}
+
+  /* ---------- hero ---------- */
+  #hero{min-height:100vh; display:flex; flex-direction:column; justify-content:center; text-align:center; padding-top:6rem;}
+
+  .hero-visual{
+    position:relative; margin: 2rem 1rem 0; border-radius:32px; overflow:hidden;
+    min-height:64vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
+    background:
+      radial-gradient(circle at 20% 20%, #EBD3EC 0%, transparent 45%),
+      radial-gradient(circle at 80% 15%, #D9E0F2 0%, transparent 50%),
+      radial-gradient(circle at 60% 85%, #F6D9E6 0%, transparent 55%),
+      radial-gradient(circle at 15% 80%, #E2D3F0 0%, transparent 50%),
+      linear-gradient(180deg, #F8ECF5 0%, #EDE0F2 100%);
+  }
+  :root[data-theme="dark"] .hero-visual{
+    background:
+      radial-gradient(circle at 20% 20%, #33263D 0%, transparent 45%),
+      radial-gradient(circle at 80% 15%, #26202F 0%, transparent 50%),
+      radial-gradient(circle at 60% 85%, #3A2838 0%, transparent 55%),
+      linear-gradient(180deg, #1E1826 0%, #150F1B 100%);
+  }
+  .hero-visual .stone{display:none;}
+  .hero-content{position:relative; z-index:2; padding:0 2rem;}
+
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); border:0.5px solid var(--border-strong);
+    padding:6px 14px; border-radius:20px; margin:0 auto 2.2rem; width:fit-content;}
+  .eyebrow .d{width:6px;height:6px;border-radius:50%; background:var(--success);}
+  h1{font-size:clamp(3.2rem, 8vw, 7.2rem); line-height:0.98; letter-spacing:-0.03em; max-width:920px; margin:0 auto; font-weight:800;}
+  .hero-sub{font-size:1.18rem; color:var(--ink-soft); max-width:560px; margin:1.8rem auto 0; line-height:1.6;}
+  .hero-actions{display:flex; gap:14px; margin:2.6rem auto 0; justify-content:center; flex-wrap:wrap;}
+  .btn{padding:13px 27px; border-radius:30px; font-size:14.5px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:transform .15s;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--accent-strong); color:#FFFFFF;}
+  .btn-ghost{border:0.5px solid var(--border-strong); color:var(--ink);}
+  .hero-trust{display:flex; gap:2.6rem; margin:4.5rem auto 0; justify-content:center; flex-wrap:wrap;}
+  .hero-trust .n{font-size:1.7rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--accent-strong);}
+  .hero-trust .l{font-size:12px; color:var(--muted); margin-top:3px;}
+
+  .reveal{opacity:0; transform:translateY(26px); transition:opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  .r1{transition-delay:.08s;} .r2{transition-delay:.16s;} .r3{transition-delay:.24s;} .r4{transition-delay:.32s;}
+
+  /* ---------- big statement ---------- */
+  #statement{padding:9rem 2rem; text-align:center;}
+  #statement p{font-size:clamp(1.6rem,3.6vw,2.6rem); max-width:820px; margin:0 auto; line-height:1.35; font-weight:500;}
+  #statement .serif{color:var(--accent-strong);}
+
+  /* ---------- research/capability grid ---------- */
+  #capabilities{padding:2rem 2rem 7rem;}
+  .section-label{font-size:12.5px; color:var(--accent-strong); font-weight:600; margin-bottom:0.9rem; display:block; text-align:center;}
+  .section-title{font-size:clamp(1.8rem, 3.2vw, 2.4rem); font-weight:700; letter-spacing:-0.015em; text-align:center; max-width:640px; margin:0 auto; line-height:1.2;}
+  .cap-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1.3rem; margin-top:3.6rem;}
+  @media (max-width:860px){ .cap-grid{grid-template-columns:1fr;} }
+  .cap-card{background:var(--surface); border:none; border-radius:20px; padding:2.1rem 1.9rem; transition:transform .25s, box-shadow .25s;
+    box-shadow:0 4px 20px rgba(154,107,176,0.08);}
+  .cap-card:hover{transform:translateY(-4px); box-shadow:0 12px 32px rgba(154,107,176,0.16);}
+  .cap-kicker{font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--muted); text-transform:lowercase;}
+  .cap-card h3{font-size:1.18rem; font-weight:700; margin:0.5rem 0 0.7rem; letter-spacing:-0.01em;}
+  .cap-card p{color:var(--ink-soft); font-size:13.8px; line-height:1.65;}
+  .cap-link{display:inline-block; margin-top:1.2rem; font-size:12.5px; color:var(--accent); text-decoration:none; border-bottom:0.5px solid transparent;}
+  .cap-link:hover{border-color:var(--accent);}
+
+  /* ---------- flagship spotlight ---------- */
+  #agent{padding:7rem 2rem; background:var(--surface); border-top:0.5px solid var(--border); border-bottom:0.5px solid var(--border);}
+  .agent-grid{display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; margin-top:3.5rem;}
+  @media (max-width:900px){ .agent-grid{grid-template-columns:1fr;} }
+  .audit-panel{background:var(--surface); border:none; border-radius:20px; padding:1.8rem; box-shadow:0 4px 24px rgba(154,107,176,0.10);}
+  .audit-log{font-family:'IBM Plex Mono',monospace; font-size:12.5px; line-height:2.1; color:var(--ink-soft);}
+  .audit-log .step{opacity:0; transform:translateX(-8px); transition:opacity .5s, transform .5s;}
+  .audit-log .step.in{opacity:1; transform:translateX(0);}
+  .audit-log .ok{color:var(--success);} .audit-log .warn{color:var(--warn);}
+  .audit-verdict{margin-top:1.2rem; background:var(--accent-soft); border-radius:10px; padding:1.1rem 1.3rem;}
+  .audit-verdict .big{font-size:1.1rem; font-weight:700; color:var(--accent-strong);}
+  .audit-verdict p{color:var(--ink-soft); font-size:12.8px; margin-top:4px; line-height:1.55;}
+  .chip-grid{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2.2rem;}
+  .chip{border:none; border-radius:14px; padding:1rem 1.1rem; background:var(--surface); box-shadow:0 2px 12px rgba(154,107,176,0.08);}
+  .chip .t{font-size:13px; font-weight:600;} .chip .d{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+
+  /* ---------- audience ---------- */
+  #audience{padding:7rem 2rem;}
+  .aud-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1.3rem; margin-top:3.6rem;}
+  @media (max-width:860px){ .aud-grid{grid-template-columns:1fr;} }
+  .aud-card{border:none; border-radius:20px; padding:2rem; background:var(--surface); box-shadow:0 4px 20px rgba(154,107,176,0.08);}
+  .aud-card .role{font-size:11.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace;}
+  .aud-card h3{font-size:1.15rem; font-weight:700; margin:0.5rem 0 0.7rem;}
+  .aud-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.6;}
+
+  /* ---------- built with strip ---------- */
+  #stack{padding:4rem 2rem; text-align:center; border-top:0.5px solid var(--border);}
+  #stack .l{font-size:11.5px; color:var(--muted); margin-bottom:1.4rem; text-transform:uppercase; letter-spacing:0.06em;}
+  .stack-row{display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;}
+  .stack-badge{border:none; background:var(--accent-soft); color:var(--accent-strong); border-radius:20px; padding:8px 16px; font-size:12.5px; font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- final cta ---------- */
+  #cta{text-align:center; padding:9rem 2rem;}
+  #cta h2{font-size:clamp(2rem,4vw,3rem); font-weight:800; letter-spacing:-0.02em; max-width:600px; margin:0 auto 1.3rem;}
+  #cta p{color:var(--ink-soft); max-width:460px; margin:0 auto 2.3rem;}
+
+  footer{border-top:0.5px solid var(--border); padding:2.4rem 2rem; display:flex; justify-content:space-between; align-items:center;
+    color:var(--muted); font-size:12.5px; flex-wrap:wrap; gap:10px;}
+</style>
+</head>
+<body>
+
+<div id="atmos"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="vignette"></div></div>
+<div id="glow"></div>
+
+<nav>
+  <a class="logo" href="#hero">
+    <svg viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="var(--ink)"/>
+      <circle cx="14" cy="14" r="7" stroke="var(--bg)" stroke-width="2"/>
+      <line x1="19" y1="19" x2="25" y2="25" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round"/>
+      <line x1="10.5" y1="12" x2="17.5" y2="12" stroke="var(--bg)" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="10.5" y1="15" x2="16" y2="15" stroke="var(--bg)" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    InvoLens
+  </a>
+  <div class="links">
+    <a class="nav-link" href="#capabilities">How it works</a>
+    <a class="nav-link" href="#agent">Agent</a>
+    <button id="themeBtn" aria-label="Toggle theme">◐</button>
+    <a class="cta-pill" href="#cta">Open InvoLens</a>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-visual">
+    <div class="stone s1"></div>
+    <div class="stone s2"></div>
+    <div class="hero-content wrap">
+      <h1 class="reveal in">Read your invoices.<br>Trust <span class="serif">only what's certain.</span></h1>
+      <p class="hero-sub reveal in r1" style="margin-left:auto; margin-right:auto;">InvoLens extracts invoice data automatically using Azure AI, scores its own confidence on every field, and flags anything it isn't sure about — instead of quietly guessing.</p>
+      <div class="hero-actions reveal in r2">
+        <a class="btn btn-primary" href="#cta">Open InvoLens →</a>
+        <a class="btn btn-ghost" href="#capabilities">See how it works</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="statement">
+  <div class="wrap">
+    <p class="reveal">Most invoice tools stop at <span class="serif">extraction.</span><br>InvoLens checks its own confidence <span class="serif">before anything gets approved.</span></p>
+  </div>
+</section>
+
+<section id="capabilities">
+  <div class="wrap">
+    <span class="section-label reveal">What it actually does</span>
+    <h2 class="section-title reveal r1">Built for one job, done properly.</h2>
+    <div class="cap-grid">
+      <div class="cap-card reveal r1">
+        <span class="cap-kicker">step · 01</span>
+        <h3>Automatic extraction</h3>
+        <p>Upload a scanned or photographed invoice. Azure AI Content Understanding reads vendor, invoice number, date, line items, and total — no manual typing.</p>
+        <a class="cap-link" href="#agent">See it in action →</a>
+      </div>
+      <div class="cap-card reveal r2">
+        <span class="cap-kicker">step · 02</span>
+        <h3>Confidence, per field</h3>
+        <p>Every extracted value carries a confidence score. Nothing is treated as certain just because it was extracted.</p>
+        <a class="cap-link" href="#agent">See it in action →</a>
+      </div>
+      <div class="cap-card reveal r3">
+        <span class="cap-kicker">step · 03</span>
+        <h3>Human-gated review</h3>
+        <p>Low-confidence fields are flagged, not auto-approved. A person makes the final call — approve or flag — and it's logged.</p>
+        <a class="cap-link" href="#agent">See it in action →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="agent">
+  <div class="wrap">
+    <span class="section-label reveal">How review actually works</span>
+    <h2 class="section-title reveal r1">Nothing is approved just because it was extracted.</h2>
+
+    <div class="agent-grid">
+      <div class="audit-panel reveal r2">
+        <div class="audit-log" id="auditLog">
+          <div class="step">→ Document received via upload</div>
+          <div class="step">→ Sent to Azure AI Content Understanding</div>
+          <div class="step">→ Fields extracted: vendor, number, date, total, items</div>
+          <div class="step ok">✓ Vendor, number, date: high confidence</div>
+          <div class="step warn">⚠ Total: confidence below threshold</div>
+          <div class="step">→ Status set to "Needs review", not auto-approved</div>
+          <div class="step">→ Awaiting human: Approve or Flag</div>
+        </div>
+        <div class="audit-verdict">
+          <div class="big">Needs review</div>
+          <p>One field's confidence didn't clear the bar — so the whole invoice waits for a person, instead of shipping through on four good fields and one bad guess.</p>
+        </div>
+      </div>
+      <div class="reveal r3">
+        <p style="color:var(--ink-soft); font-size:15px; line-height:1.7; margin-bottom:1.6rem;">
+          This is the actual logic running in the backend, not a mockup: confidence is checked per field, the invoice status is set automatically, and every approve/flag action is written to that invoice's own activity log.
+        </p>
+        <div class="chip-grid">
+          <div class="chip"><div class="t">No manual entry</div><div class="d">Fields populate from the document itself</div></div>
+          <div class="chip"><div class="t">Confidence-gated</div><div class="d">Low-confidence fields are never silently trusted</div></div>
+          <div class="chip"><div class="t">Full activity log</div><div class="d">Every approve/flag action is recorded</div></div>
+          <div class="chip"><div class="t">Course project scope</div><div class="d">Built solo/small-team for AI-103, not a company product</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="audience">
+  <div class="wrap">
+    <span class="section-label reveal">Who this is built for</span>
+    <h2 class="section-title reveal r1">A real workflow, built to demonstrate real AI-103 concepts.</h2>
+    <div class="aud-grid">
+      <div class="aud-card reveal r1">
+        <div class="role">the use case</div>
+        <h3>Manual invoice entry, automated</h3>
+        <p>The problem this solves: someone re-typing invoice data by hand, slowly and with errors. InvoLens does that reading step instead.</p>
+      </div>
+      <div class="aud-card reveal r2">
+        <div class="role">the ai-103 concepts</div>
+        <h3>Document extraction + responsible AI</h3>
+        <p>Real Azure AI document extraction, plus a genuine human-in-the-loop review workflow driven by confidence scoring — not just a demo of one API call.</p>
+      </div>
+      <div class="aud-card reveal r3">
+        <div class="role">the project</div>
+        <h3>Course project, not a company</h3>
+        <p>Built for the AI-103 group project at Chitkara University. Frontend, backend, and Azure integration are all part of the same submission.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <div class="l reveal">Built with</div>
+    <div class="stack-row reveal r1">
+      <span class="stack-badge">Azure AI Foundry</span>
+      <span class="stack-badge">Content Understanding</span>
+      <span class="stack-badge">FastAPI</span>
+      <span class="stack-badge">HTML / CSS / JS</span>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="wrap">
+    <h2 class="reveal">See it read a real invoice.</h2>
+    <p class="reveal r1">The working app — upload, extraction, and the full review workflow — is one click away.</p>
+    <a class="btn btn-primary reveal r2" href="http://localhost:8000/app" style="margin:0 auto; width:fit-content;">Open InvoLens →</a>
+  </div>
+</section>
+
+<footer>
+  <span>InvoLens · AI-103 Group Project · Chitkara University</span>
+  <span class="mono">Azure AI Content Understanding · Azure AI Foundry</span>
+</footer>
+
+<script>
+const revealEls = document.querySelectorAll('.reveal:not(.in)');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold:0.15});
+revealEls.forEach(el=>io.observe(el));
+
+const glow = document.getElementById('glow');
+window.addEventListener('mousemove', (e)=>{
+  glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
+});
+
+const steps = document.querySelectorAll('#auditLog .step');
+const auditIo = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      steps.forEach((s,i)=> setTimeout(()=> s.classList.add('in'), i*260));
+      auditIo.disconnect();
+    }
+  });
+}, {threshold:0.4});
+if(steps.length) auditIo.observe(document.getElementById('auditLog'));
+
+function applyStoredTheme(){
+  try{
+    const t = localStorage.getItem('lineItemLandingTheme');
+    if(t) document.documentElement.setAttribute('data-theme', t);
+  }catch(e){}
+}
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('lineItemLandingTheme', next); }catch(e){}
+});
+applyStoredTheme();
+</script>
+</body>
+</html>
