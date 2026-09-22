@@ -2,10 +2,10 @@
 
 **AI-powered Invoice Processing Assistant** — built for AI-103 (Develop AI Apps and Agents on Azure)
 
-[![Azure](https://img.shields.io/badge/Azure-AI%20Foundry-0078D4?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
-[![Python](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Status](https://img.shields.io/badge/Status-Working%20Prototype-brightgreen)]()
-[![License](https://img.shields.io/badge/Course-AI--103-blueviolet)]()
+[![Azure](https://img.shields.io/badge/Azure-AI%20Foundry-0078D4?logo=microsoftazure&logoColor=white)]
+[![Python](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)]
+[![Status](https://img.shields.io/badge/Status-Working%20Prototype-brightgreen)]
+[![License](https://img.shields.io/badge/Course-AI--103-blueviolet)]
 
 > Upload an invoice. InvoLens reads it with Azure AI, scores its own confidence on every field, and flags anything it isn't sure about — instead of quietly guessing.
 
